@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>山野是一所學校</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400;500&family=Noto+Sans+TC:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1612;
+    --ink-light: #6b6358;
+    --ink-faint: #c8bfb0;
+    --paper: #f5f0e8;
+    --paper-warm: #ede6d6;
+    --accent: #4a6741;
+    --accent-light: #e8efe6;
+    --serif: 'Noto Serif TC', serif;
+    --sans: 'Noto Sans TC', sans-serif;
+  }
+
+  html { background: var(--paper); color: var(--ink); font-family: var(--sans); }
+
+  body { min-height: 100vh; }
+
+  /* header */
+  header {
+    padding: 3rem 4rem 2rem;
+    border-bottom: 1px solid var(--ink-faint);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .site-title {
+    font-family: var(--serif);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+
+  .site-subtitle {
+    font-size: 0.8rem;
+    color: var(--ink-light);
+    letter-spacing: 0.2em;
+    margin-top: 0.4rem;
+  }
+
+  .header-deco {
+    width: 80px;
+    height: 1px;
+    background: var(--ink-faint);
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  /* main layout */
+  main { padding: 3rem 4rem 5rem; max-width: 1200px; margin: 0 auto; }
+
+  /* section label */
+  .label {
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    color: var(--ink-light);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--ink-faint);
+  }
+
+  /* featured */
+  .featured {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    border: 1px solid var(--ink-faint);
+    margin-bottom: 4rem;
+    background: var(--paper-warm);
+    cursor: pointer;
+    transition: border-color 0.3s;
+  }
+  .featured:hover { border-color: var(--accent); }
+
+  .featured-cover {
+    background: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    border-right: 1px solid var(--ink-faint);
+    min-height: 300px;
+  }
+
+  .cover-img {
+    width: 100%;
+    aspect-ratio: 297/210; /* A3 橫式比例 */
+    object-fit: cover;
+    display: block;
+  }
+
+  .cover-placeholder {
+    width: 100%;
+    aspect-ratio: 297/210;
+    border: 1px dashed var(--ink-faint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-faint);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+
+  .featured-body {
+    padding: 2.5rem 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .new-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 0.2rem 0.6rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .featured-vol {
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    line-height: 1.3;
+    margin-bottom: 0.4rem;
+  }
+
+  .featured-date {
+    font-size: 0.8rem;
+    color: var(--ink-light);
+    letter-spacing: 0.15em;
+    margin-bottom: 1.5rem;
+  }
+
+  .featured-desc {
+    font-size: 0.9rem;
+    color: var(--ink-light);
+    line-height: 1.9;
+    flex: 1;
+  }
+
+  .read-link {
+    margin-top: 2rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+    padding-bottom: 2px;
+  }
+  .read-link:hover { border-color: var(--accent); }
+  .read-link::after { content: '→'; }
+
+  /* archive grid */
+  .archive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .issue-card {
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .issue-card:hover { opacity: 0.75; }
+
+  .issue-card-cover {
+    aspect-ratio: 297/210;
+    background: var(--paper-warm);
+    border: 1px solid var(--ink-faint);
+    overflow: hidden;
+    margin-bottom: 0.8rem;
+  }
+  .issue-card-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .issue-card-cover .placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-faint);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+  }
+
+  .issue-card-vol {
+    font-family: var(--serif);
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+  }
+  .issue-card-date {
+    font-size: 0.75rem;
+    color: var(--ink-light);
+    margin-top: 0.2rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* empty state */
+  .empty { color: var(--ink-faint); font-size: 0.85rem; letter-spacing: 0.1em; padding: 2rem 0; }
+
+  /* footer */
+  footer {
+    border-top: 1px solid var(--ink-faint);
+    padding: 2rem 4rem;
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    text-align: center;
+  }
+
+  /* fade in */
+  .fade-in { animation: fadeIn 0.6s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+
+  @media (max-width: 700px) {
+    header { padding: 2rem 1.5rem 1.5rem; }
+    main { padding: 2rem 1.5rem 4rem; }
+    .featured { grid-template-columns: 1fr; }
+    .featured-cover { border-right: none; border-bottom: 1px solid var(--ink-faint); min-height: auto; }
+    .featured-body { padding: 1.5rem; }
+    footer { padding: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="fade-in">
+  <div>
+    <div class="site-title">山野是一所學校</div>
+    <div class="site-subtitle">PERIODICAL</div>
+  </div>
+  <div class="header-deco"></div>
+</header>
+
+<main>
+  <div id="featured-section"></div>
+  <div id="archive-section"></div>
+</main>
+
+<footer>
+  山野是一所學校 © <span id="year"></span>
+</footer>
+
+<script>
+document.getElementById('year').textContent = new Date().getFullYear();
+
+async function loadIssues() {
+  let issues = [];
+  try {
+    const res = await fetch('issues.json');
+    issues = await res.json();
+  } catch (e) {
+    console.error('無法載入 issues.json', e);
+    return;
+  }
+
+  if (!issues.length) return;
+
+  const featured = issues[0];
+  const archive = issues.slice(1);
+
+  // --- 最新一期 ---
+  const featuredEl = document.getElementById('featured-section');
+
+  const coverHTML = featured.cover
+    ? `<img class="cover-img" src="issues/${featured.folder}/${featured.cover}" alt="${featured.vol} 封面">`
+    : `<div class="cover-placeholder">封面圖片</div>`;
+
+  featuredEl.innerHTML = `
+    <div class="label fade-in">最新一期</div>
+    <div class="featured fade-in delay-1" onclick="openIssue('${featured.folder}', '${featured.vol}')">
+      <div class="featured-cover">${coverHTML}</div>
+      <div class="featured-body">
+        <div>
+          <div class="new-tag">LATEST ISSUE</div>
+          <div class="featured-vol">${featured.vol}</div>
+          <div class="featured-date">${featured.date}${featured.pages ? '　·　' + featured.pages + ' 頁' : ''}</div>
+          <div class="featured-desc">${featured.description || ''}</div>
+        </div>
+        <a class="read-link" onclick="event.stopPropagation(); openIssue('${featured.folder}', '${featured.vol}')">閱讀本期</a>
+      </div>
+    </div>
+  `;
+
+  // --- 過往期刊 ---
+  const archiveEl = document.getElementById('archive-section');
+
+  if (!archive.length) return;
+
+  const cards = archive.map((issue, i) => {
+    const cover = issue.cover
+      ? `<img src="issues/${issue.folder}/${issue.cover}" alt="${issue.vol} 封面" style="width:100%;height:100%;object-fit:cover;">`
+      : `<div class="placeholder">封面圖片</div>`;
+    return `
+      <div class="issue-card fade-in delay-${Math.min(i + 2, 3)}" onclick="openIssue('${issue.folder}', '${issue.vol}')">
+        <div class="issue-card-cover">${cover}</div>
+        <div class="issue-card-vol">${issue.vol}</div>
+        <div class="issue-card-date">${issue.date}</div>
+      </div>
+    `;
+  }).join('');
+
+  archiveEl.innerHTML = `
+    <div class="label fade-in">過往期刊</div>
+    <div class="archive-grid">${cards}</div>
+  `;
+}
+
+function openIssue(folder, vol) {
+  window.location.href = `viewer.html?issue=${folder}&vol=${encodeURIComponent(vol)}`;
+}
+
+loadIssues();
+</script>
+</body>
+</html>

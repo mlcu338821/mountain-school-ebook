@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>閱讀 — 山野是一所學校</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@300;400&family=Noto+Sans+TC:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1612;
+    --ink-light: #6b6358;
+    --ink-faint: #c8bfb0;
+    --paper: #f5f0e8;
+    --paper-warm: #ede6d6;
+    --accent: #4a6741;
+    --serif: 'Noto Serif TC', serif;
+    --sans: 'Noto Sans TC', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
+
+  /* top bar */
+  #topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    background: rgba(26,22,18,0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(200,191,176,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    z-index: 100;
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 1rem; }
+
+  .back-btn {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: color 0.2s;
+  }
+  .back-btn:hover { color: var(--paper); }
+  .back-btn::before { content: '←'; }
+
+  .divider { width: 1px; height: 16px; background: rgba(200,191,176,0.2); }
+
+  #vol-title {
+    font-family: var(--serif);
+    font-size: 0.85rem;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+  }
+
+  #page-info {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+  }
+
+  /* viewer area */
+  #viewer-wrap {
+    position: fixed;
+    top: 52px; left: 0; right: 0; bottom: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #book-container {
+    position: relative;
+  }
+
+  /* bottom controls */
+  #controls {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 52px;
+    background: rgba(26,22,18,0.95);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(200,191,176,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    z-index: 100;
+  }
+
+  .ctrl-btn {
+    background: none;
+    border: 1px solid rgba(200,191,176,0.25);
+    color: var(--ink-faint);
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .ctrl-btn:hover:not(:disabled) {
+    border-color: var(--paper);
+    color: var(--paper);
+  }
+  .ctrl-btn:disabled { opacity: 0.2; cursor: default; }
+
+  #progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  #progress {
+    width: 120px;
+    height: 1px;
+    background: rgba(200,191,176,0.2);
+    position: relative;
+  }
+  #progress-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--ink-faint);
+    transition: width 0.3s;
+  }
+
+  /* loading */
+  #loading {
+    position: fixed;
+    inset: 0;
+    background: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    z-index: 200;
+  }
+  #loading-title {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    color: var(--ink-faint);
+  }
+  #loading-bar-wrap {
+    width: 160px;
+    height: 1px;
+    background: rgba(200,191,176,0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  #loading-bar {
+    position: absolute;
+    left: -100%;
+    top: 0; bottom: 0;
+    width: 100%;
+    background: var(--ink-faint);
+    animation: slide 1.2s ease-in-out infinite;
+  }
+  @keyframes slide { to { left: 100%; } }
+
+  /* error */
+  #error {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--ink);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 200;
+  }
+  #error p { color: var(--ink-faint); font-size: 0.85rem; letter-spacing: 0.1em; text-align: center; line-height: 2; }
+  #error a { color: var(--ink-faint); }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div id="loading-title">山野是一所學校</div>
+  <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
+</div>
+
+<div id="error">
+  <p>找不到此期圖片。<br>請確認 issues 資料夾中有對應的圖片檔案。<br><br><a href="index.html">← 返回首頁</a></p>
+</div>
+
+<div id="topbar">
+  <div class="topbar-left">
+    <a class="back-btn" href="index.html">返回首頁</a>
+    <div class="divider"></div>
+    <div id="vol-title">—</div>
+  </div>
+  <div id="page-info">—</div>
+</div>
+
+<div id="viewer-wrap">
+  <div id="book-container"></div>
+</div>
+
+<div id="controls">
+  <button class="ctrl-btn" id="btn-prev" title="上一頁">‹</button>
+  <div id="progress-wrap">
+    <div id="progress"><div id="progress-fill"></div></div>
+  </div>
+  <button class="ctrl-btn" id="btn-next" title="下一頁">›</button>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+const folder = params.get('issue') || '';
+const vol = decodeURIComponent(params.get('vol') || '');
+
+document.getElementById('vol-title').textContent = vol || '山野是一所學校';
+document.title = (vol || '閱讀') + ' — 山野是一所學校';
+
+// 支援的圖片副檔名
+const EXTS = ['jpg', 'jpeg', 'png', 'webp'];
+
+// 探測某張圖片是否存在
+function testImage(url) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+}
+
+// 找出所有頁面圖片 (page-01, page-02, ...)
+async function findPages() {
+  const pages = [];
+  let i = 1;
+  while (true) {
+    const num = String(i).padStart(2, '0');
+    let found = false;
+    for (const ext of EXTS) {
+      const url = `issues/${folder}/page-${num}.${ext}`;
+      if (await testImage(url)) {
+        pages.push(url);
+        found = true;
+        break;
+      }
+    }
+    if (!found) break;
+    i++;
+    if (i > 200) break; // 安全上限
+  }
+  return pages;
+}
+
+let pageFlip = null;
+let totalPages = 0;
+
+function updateUI(currentPage) {
+  const spread = Math.ceil((currentPage + 1) / 2);
+  const totalSpreads = Math.ceil(totalPages / 2);
+  document.getElementById('page-info').textContent = `第 ${currentPage + 1} 頁 / 共 ${totalPages} 頁`;
+  document.getElementById('progress-fill').style.width = ((currentPage + 1) / totalPages * 100) + '%';
+  document.getElementById('btn-prev').disabled = currentPage === 0;
+  document.getElementById('btn-next').disabled = currentPage >= totalPages - 1;
+}
+
+async function init() {
+  if (!folder) {
+    showError();
+    return;
+  }
+
+  const pages = await findPages();
+
+  if (!pages.length) {
+    showError();
+    return;
+  }
+
+  totalPages = pages.length;
+
+  // 計算書本尺寸（A3 橫式，攤開雙頁）
+  const vw = window.innerWidth;
+  const vh = window.innerHeight - 104; // 減去上下 bar
+  // A3 橫式單頁比例 = 420/297
+  const pageRatio = 420 / 297;
+  let pageH = Math.min(vh * 0.9, 700);
+  let pageW = Math.round(pageH / pageRatio);
+  // 雙頁寬度不超過視窗
+  if (pageW * 2 > vw * 0.9) {
+    pageW = Math.floor(vw * 0.9 / 2);
+    pageH = Math.round(pageW * pageRatio);
+  }
+
+  const container = document.getElementById('book-container');
+  container.style.width = (pageW * 2) + 'px';
+  container.style.height = pageH + 'px';
+
+  // 建立頁面元素
+  pages.forEach(url => {
+    const page = document.createElement('div');
+    page.className = 'page';
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+    img.draggable = false;
+    page.appendChild(img);
+    container.appendChild(page);
+  });
+
+  // 初始化 StPageFlip
+  // 左翻 = RTL (由右至左)
+  pageFlip = new St.PageFlip(container, {
+    width: pageW,
+    height: pageH,
+    size: 'fixed',
+    minWidth: pageW,
+    maxWidth: pageW,
+    minHeight: pageH,
+    maxHeight: pageH,
+    showCover: true,
+    flippingTime: 700,
+    usePortrait: false,
+    startZIndex: 0,
+    autoSize: false,
+    clickEventForward: true,
+    useMouseEvents: true,
+    swipeDistance: 30,
+    showPageCorners: true,
+    disableFlipByClick: false,
+    startPage: 0,
+    drawShadow: true,
+    direction: 'rtl', // 左翻
+    mobileScrollSupport: true,
+  });
+
+  pageFlip.loadFromHTML(container.querySelectorAll('.page'));
+
+  pageFlip.on('flip', e => updateUI(e.data));
+  pageFlip.on('changeState', () => {
+    const cur = pageFlip.getCurrentPageIndex();
+    updateUI(cur);
+  });
+
+  // 隱藏 loading
+  document.getElementById('loading').style.display = 'none';
+  updateUI(0);
+}
+
+function showError() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('error').style.display = 'flex';
+}
+
+document.getElementById('btn-prev').addEventListener('click', () => {
+  pageFlip && pageFlip.flipPrev();
+});
+document.getElementById('btn-next').addEventListener('click', () => {
+  pageFlip && pageFlip.flipNext();
+});
+
+// 鍵盤控制
+document.addEventListener('keydown', e => {
+  if (!pageFlip) return;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') pageFlip.flipPrev();
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') pageFlip.flipNext();
+});
+
+init();
+</script>
+</body>
+</html>

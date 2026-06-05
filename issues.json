@@ -1,0 +1,16 @@
+[
+  {
+    "vol": "Vol.1 No.1",
+    "date": "2025 年 3 月",
+    "pages": 24,
+    "folder": "2025-03",
+    "description": "在這裡填寫本期簡介，讓讀者了解本期內容重點。"
+  },
+  {
+    "vol": "Vol.0 No.1",
+    "date": "2024 年 9 月",
+    "pages": 20,
+    "folder": "2024-09",
+    "description": ""
+  }
+]
