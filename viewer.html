@@ -457,12 +457,17 @@ function initMagnifier(container, loadedImages, pageW, pageH, isMobile) {
     const pageRelX = isRightPage ? relX - pageW : relX;
     const pageRelY = relY;
 
-    // 對應到圖片的真實座標
+    // 游標對應到圖片的真實像素座標
     const srcX = (pageRelX / pageW) * img.naturalWidth;
     const srcY = (pageRelY / pageH) * img.naturalHeight;
 
-    const srcW = img.naturalWidth / MAG_ZOOM;
-    const srcH = img.naturalHeight / MAG_ZOOM;
+    // 用「像素/螢幕像素」的比例算出放大鏡視窗對應多大的來源區域
+    // 保持正方形，避免變形
+    const pxPerScreen = img.naturalWidth / pageW; // 圖片像素 / 螢幕像素
+    const srcSize = (MAG_SIZE / MAG_ZOOM) * pxPerScreen;
+
+    const sx = Math.max(0, Math.min(srcX - srcSize / 2, img.naturalWidth - srcSize));
+    const sy = Math.max(0, Math.min(srcY - srcSize / 2, img.naturalHeight - srcSize));
 
     ctx.clearRect(0, 0, MAG_SIZE, MAG_SIZE);
 
@@ -474,10 +479,8 @@ function initMagnifier(container, loadedImages, pageW, pageH, isMobile) {
 
     ctx.drawImage(
       img,
-      Math.max(0, srcX - srcW / 2),
-      Math.max(0, srcY - srcH / 2),
-      srcW,
-      srcH,
+      sx, sy,
+      srcSize, srcSize,  // 正方形來源區域
       0, 0,
       MAG_SIZE, MAG_SIZE
     );
