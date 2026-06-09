@@ -443,8 +443,10 @@ function initMagnifier(container, loadedImages, pageW, pageH, isMobile) {
     const relY = mouseY - rect.top;
 
     // 判斷游標在哪一頁（左頁或右頁）
-    const isRightPage = relX > pageW;
-    const pageIndex = pageFlip ? pageFlip.getCurrentPageIndex() + (isRightPage ? 1 : 0) : 0;
+    const currentIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
+    const isCover = currentIndex === 0; // 封面是單頁，左側沒有內容
+    const isRightPage = !isCover && relX > pageW;
+    const pageIndex = currentIndex + (isRightPage ? 1 : 0);
     const imgs = container.querySelectorAll('.page img');
     const img = imgs[pageIndex];
 
