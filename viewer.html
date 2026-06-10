@@ -542,23 +542,17 @@ function initMagnifier(container, loadedImages, pageW, pageH, isMobile) {
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
   });
 
-function drawMagnifier() {
+  function drawMagnifier() {
     rafId = null;
+    // 取得 book-container 的位置
     const rect = container.getBoundingClientRect();
-
-    // === 新增：動態計算目前的縮放比例 ===
-    const currentScale = rect.width / parseInt(container.style.width) || 1;
-    // 將原始的 pageW 與 pageH 乘上當前的縮放比例
-    const scaledPageW = pageW * currentScale;
-    const scaledPageH = pageH * currentScale;
-
     const relX = mouseX - rect.left;
     const relY = mouseY - rect.top;
 
+    // 判斷游標在哪一頁（左頁或右頁）
     const currentIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
-    const isCover = currentIndex === 0; 
-    // 判斷游標是否在右頁 (使用縮放後的寬度)
-    const isRightPage = !isCover && relX > scaledPageW;
+    const isCover = currentIndex === 0; // 封面是單頁，左側沒有內容
+    const isRightPage = !isCover && relX > pageW;
     const pageIndex = currentIndex + (isRightPage ? 1 : 0);
     const imgs = container.querySelectorAll('.page img');
     const img = imgs[pageIndex];
@@ -567,38 +561,6 @@ function drawMagnifier() {
       rafId = requestAnimationFrame(drawMagnifier);
       return;
     }
-
-    // 計算游標在該單頁內的相對座標
-    const pageRelX = isRightPage ? relX - scaledPageW : relX;
-    const pageRelY = relY;
-
-    // 將畫面座標轉換為圖片的真實像素座標
-    const srcX = (pageRelX / scaledPageW) * img.naturalWidth;
-    const srcY = (pageRelY / scaledPageH) * img.naturalHeight;
-
-    const pxPerScreen = img.naturalWidth / scaledPageW;
-    const srcSize = (MAG_SIZE / MAG_ZOOM) * pxPerScreen;
-
-    const sx = Math.max(0, Math.min(srcX - srcSize / 2, img.naturalWidth - srcSize));
-    const sy = Math.max(0, Math.min(srcY - srcSize / 2, img.naturalHeight - srcSize));
-
-    ctx.clearRect(0, 0, MAG_SIZE, MAG_SIZE);
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(MAG_SIZE / 2, MAG_SIZE / 2, MAG_SIZE / 2, 0, Math.PI * 2);
-    ctx.clip();
-
-    ctx.drawImage(
-      img,
-      sx, sy,
-      srcSize, srcSize,  
-      0, 0,
-      MAG_SIZE, MAG_SIZE
-    );
-
-    ctx.restore();
-  }
 
     // 游標在該頁的相對位置
     const pageRelX = isRightPage ? relX - pageW : relX;
@@ -644,40 +606,49 @@ function showError() {
 document.getElementById('btn-prev').addEventListener('click', () => pageFlip && pageFlip.flipPrev());
 document.getElementById('btn-next').addEventListener('click', () => pageFlip && pageFlip.flipNext());
 
+document.addEventListener('keydown', e => {
+  if (!pageFlip) return;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') pageFlip.flipPrev();
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') pageFlip.flipNext();
+});
+
+init();
+
+// 全螢幕
+const btnFs = document.getElementById('btn-fullscreen');
+const iconEnter = document.getElementById('icon-enter');
+const iconExit = document.getElementById('icon-exit');
+
+btnFs.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+});
+
 document.addEventListener('fullscreenchange', () => {
   const isFs = !!document.fullscreenElement;
   btnFs.classList.toggle('active', isFs);
   iconEnter.style.display = isFs ? 'none' : '';
   iconExit.style.display = isFs ? '' : 'none';
 
-  // 稍微延遲以確保瀏覽器已切換至全螢幕尺寸
+  // 全螢幕切換後重新計算書本尺寸
   setTimeout(() => {
     if (!pageFlip) return;
-    const container = document.getElementById('book-container');
     const vw = window.innerWidth;
-    // 扣除上下控制列的高度 (104px)
-    const vh = window.innerHeight - 104; 
-
-    if (isFs) {
-      // 1. 取得書本初始化時的原始寬高
-      const origW = parseInt(container.style.width);
-      const origH = parseInt(container.style.height);
-
-      // 2. 計算全螢幕下最大可放大的比例 (預留 0.95 倍當作邊距，才不會太貼邊)
-      const scaleW = (vw * 0.95) / origW;
-      const scaleH = (vh * 0.95) / origH;
-      
-      // 取寬與高中較小的縮放比例，確保整本書都能完整顯示
-      const scale = Math.min(scaleW, scaleH);
-
-      // 3. 使用 CSS transform 放大
-      container.style.transform = `scale(${scale})`;
-      container.style.transformOrigin = 'center center';
-      container.style.transition = 'transform 0.3s ease'; // 加入平滑過渡動畫
-    } else {
-      // 退出全螢幕，恢復原始大小 1 倍
-      container.style.transform = 'scale(1)';
+    const vh = window.innerHeight - 104;
+    const pageRatio = 420 / 297;
+    let pageH = Math.min(vh * 0.9, isFs ? vh * 0.9 : 700);
+    let pageW = Math.round(pageH / pageRatio);
+    if (pageW * 2 > vw * 0.9) {
+      pageW = Math.floor(vw * 0.9 / 2);
+      pageH = Math.round(pageW * pageRatio);
     }
+    const container = document.getElementById('book-container');
+    container.style.width = (pageW * 2) + 'px';
+    container.style.height = pageH + 'px';
+    pageFlip.updateState();
   }, 100);
 });
 </script>
