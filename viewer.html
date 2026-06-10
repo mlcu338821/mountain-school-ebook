@@ -416,6 +416,94 @@ async function init() {
     initMagnifier(container, loadedImages, pageW, pageH, isMobile);
   } else {
     document.getElementById('btn-magnifier').style.display = 'none';
+    document.getElementById('btn-fullscreen').style.display = 'none';
+    initPinchZoom(container);
+  }
+}
+
+// ---- 手機雙指縮放 ----
+function initPinchZoom(container) {
+  let scale = 1;
+  let lastScale = 1;
+  let originX = 0, originY = 0;
+  let translateX = 0, translateY = 0;
+  let lastTranslateX = 0, lastTranslateY = 0;
+
+  // 記錄兩指中心
+  function getMidpoint(t1, t2) {
+    return {
+      x: (t1.clientX + t2.clientX) / 2,
+      y: (t1.clientY + t2.clientY) / 2
+    };
+  }
+  function getDist(t1, t2) {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  let initDist = 0;
+  let initMid = { x: 0, y: 0 };
+  let isPinching = false;
+
+  container.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      isPinching = true;
+      initDist = getDist(e.touches[0], e.touches[1]);
+      initMid = getMidpoint(e.touches[0], e.touches[1]);
+      lastScale = scale;
+      lastTranslateX = translateX;
+      lastTranslateY = translateY;
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchmove', e => {
+    if (!isPinching || e.touches.length !== 2) return;
+    e.preventDefault();
+
+    const newDist = getDist(e.touches[0], e.touches[1]);
+    const newMid = getMidpoint(e.touches[0], e.touches[1]);
+
+    scale = Math.max(1, Math.min(4, lastScale * (newDist / initDist)));
+
+    // 平移：讓縮放中心點保持在手指中間
+    translateX = lastTranslateX + (newMid.x - initMid.x);
+    translateY = lastTranslateY + (newMid.y - initMid.y);
+
+    applyTransform();
+  }, { passive: false });
+
+  container.addEventListener('touchend', e => {
+    if (e.touches.length < 2) {
+      isPinching = false;
+      // 縮回 1x 時重置位置
+      if (scale <= 1) {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        applyTransform();
+      }
+    }
+  });
+
+  // 雙擊重置
+  let lastTap = 0;
+  container.addEventListener('touchend', e => {
+    const now = Date.now();
+    if (now - lastTap < 300 && e.touches.length === 0) {
+      scale = 1;
+      translateX = 0;
+      translateY = 0;
+      applyTransform();
+    }
+    lastTap = now;
+  });
+
+  function applyTransform() {
+    container.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    container.style.transformOrigin = 'center center';
+    container.style.transition = isPinching ? 'none' : 'transform 0.2s ease';
   }
 }
 
@@ -544,6 +632,24 @@ document.addEventListener('fullscreenchange', () => {
   btnFs.classList.toggle('active', isFs);
   iconEnter.style.display = isFs ? 'none' : '';
   iconExit.style.display = isFs ? '' : 'none';
+
+  // 全螢幕切換後重新計算書本尺寸
+  setTimeout(() => {
+    if (!pageFlip) return;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight - 104;
+    const pageRatio = 420 / 297;
+    let pageH = Math.min(vh * 0.9, isFs ? vh * 0.9 : 700);
+    let pageW = Math.round(pageH / pageRatio);
+    if (pageW * 2 > vw * 0.9) {
+      pageW = Math.floor(vw * 0.9 / 2);
+      pageH = Math.round(pageW * pageRatio);
+    }
+    const container = document.getElementById('book-container');
+    container.style.width = (pageW * 2) + 'px';
+    container.style.height = pageH + 'px';
+    pageFlip.updateState();
+  }, 100);
 });
 </script>
 </body>
