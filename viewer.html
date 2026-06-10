@@ -263,6 +263,20 @@
       <line x1="10" y1="10" x2="14" y2="14"/>
     </svg>
   </button>
+  <button class="ctrl-btn" id="btn-fullscreen" title="全螢幕">
+    <svg id="icon-enter" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="1,5 1,1 5,1"/>
+      <polyline points="11,1 15,1 15,5"/>
+      <polyline points="15,11 15,15 11,15"/>
+      <polyline points="5,15 1,15 1,11"/>
+    </svg>
+    <svg id="icon-exit" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+      <polyline points="5,1 1,1 1,5"/>
+      <polyline points="15,5 15,1 11,1"/>
+      <polyline points="11,15 15,15 15,11"/>
+      <polyline points="1,11 1,15 5,15"/>
+    </svg>
+  </button>
 </div>
 
 <script>
@@ -511,6 +525,26 @@ document.addEventListener('keydown', e => {
 });
 
 init();
+
+// 全螢幕
+const btnFs = document.getElementById('btn-fullscreen');
+const iconEnter = document.getElementById('icon-enter');
+const iconExit = document.getElementById('icon-exit');
+
+btnFs.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+});
+
+document.addEventListener('fullscreenchange', () => {
+  const isFs = !!document.fullscreenElement;
+  btnFs.classList.toggle('active', isFs);
+  iconEnter.style.display = isFs ? 'none' : '';
+  iconExit.style.display = isFs ? '' : 'none';
+});
 </script>
 </body>
 </html>
