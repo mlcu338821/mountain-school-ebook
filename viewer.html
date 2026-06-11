@@ -355,8 +355,15 @@ function calcSize(availW, availH) {
 function applySize(availW, availH) {
   const container = document.getElementById('book-container');
   const { pageW, pageH } = calcSize(availW, availH);
+  
+  // 更新容器尺寸
   container.style.width = (isMobile ? pageW : pageW * 2) + 'px';
   container.style.height = pageH + 'px';
+  
+  // 【關鍵新增】強制 page-flip 重新計算並繪製畫布尺寸
+  if (pageFlip) {
+    pageFlip.update();
+  }
 }
 
 function updateUI(currentPage) {
