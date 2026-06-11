@@ -330,44 +330,33 @@ let totalPages = 0;
 let isMobile = false;
 const PAGE_RATIO = 420 / 297; // A3 橫式
 
-function calcSize(fullscreen) {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight - (fullscreen ? 0 : 104);
-
+// 根據 viewer-wrap 實際可用空間計算書本尺寸
+function calcSize(availW, availH) {
   let pageW, pageH;
   if (isMobile) {
-    pageW = Math.floor(vw * 0.95);
+    pageW = Math.floor(availW * 0.95);
     pageH = Math.round(pageW * PAGE_RATIO);
-    if (pageH > vh * 0.95) {
-      pageH = Math.floor(vh * 0.95);
+    if (pageH > availH * 0.95) {
+      pageH = Math.floor(availH * 0.95);
       pageW = Math.round(pageH / PAGE_RATIO);
     }
   } else {
-    const maxH = fullscreen ? vh * 0.92 : Math.min(vh * 0.9, 700);
-    pageH = maxH;
+    pageH = availH * 0.95;
     pageW = Math.round(pageH / PAGE_RATIO);
-    if (pageW * 2 > vw * 0.92) {
-      pageW = Math.floor(vw * 0.92 / 2);
+    if (pageW * 2 > availW * 0.95) {
+      pageW = Math.floor(availW * 0.95 / 2);
       pageH = Math.round(pageW * PAGE_RATIO);
     }
   }
   return { pageW, pageH };
 }
 
-function applySize(fullscreen) {
-  if (!pageFlip) return;
-  const { pageW, pageH } = calcSize(fullscreen);
+// 直接套用容器尺寸，讓 StPageFlip (size: 'stretch') 自動適應
+function applySize(availW, availH) {
   const container = document.getElementById('book-container');
+  const { pageW, pageH } = calcSize(availW, availH);
   container.style.width = (isMobile ? pageW : pageW * 2) + 'px';
   container.style.height = pageH + 'px';
-  pageFlip.update({
-    width: pageW,
-    height: pageH,
-    minWidth: pageW,
-    maxWidth: pageW,
-    minHeight: pageH,
-    maxHeight: pageH,
-  });
 }
 
 function updateUI(currentPage) {
@@ -386,11 +375,11 @@ async function init() {
   totalPages = pages.length;
 
   isMobile = window.innerWidth < 700;
-  const { pageW, pageH } = calcSize(false);
 
+  const wrap = document.getElementById('viewer-wrap');
   const container = document.getElementById('book-container');
-  container.style.width = (isMobile ? pageW : pageW * 2) + 'px';
-  container.style.height = pageH + 'px';
+  applySize(wrap.clientWidth, wrap.clientHeight);
+  const { pageW, pageH } = calcSize(wrap.clientWidth, wrap.clientHeight);
 
   // 預載圖片並記錄
   const loadedImages = [];
@@ -411,16 +400,15 @@ async function init() {
   pageFlip = new St.PageFlip(container, {
     width: pageW,
     height: pageH,
-    size: 'fixed',
-    minWidth: pageW,
-    maxWidth: pageW,
-    minHeight: pageH,
-    maxHeight: pageH,
+    size: 'stretch',
+    minWidth: 200,
+    maxWidth: 3000,
+    minHeight: 200,
+    maxHeight: 3000,
     showCover: true,
     flippingTime: 700,
     usePortrait: isMobile,
     startZIndex: 0,
-    autoSize: false,
     clickEventForward: true,
     useMouseEvents: true,
     swipeDistance: 30,
@@ -664,10 +652,19 @@ document.addEventListener('fullscreenchange', () => {
   iconEnter.style.display = isFs ? 'none' : '';
   iconExit.style.display = isFs ? '' : 'none';
   viewerWrap.classList.toggle('is-fullscreen', isFs);
-
-  // 等待瀏覽器完成全螢幕轉場後再重新計算尺寸
-  setTimeout(() => applySize(isFs), 150);
+  // 實際尺寸調整交給 ResizeObserver 處理
 });
+
+// 監聽 viewer-wrap 尺寸變化（含全螢幕切換、視窗縮放）
+const resizeObserver = new ResizeObserver(entries => {
+  for (const entry of entries) {
+    const { width, height } = entry.contentRect;
+    if (width > 0 && height > 0) {
+      applySize(width, height);
+    }
+  }
+});
+resizeObserver.observe(viewerWrap);
 </script>
 </body>
 </html>
