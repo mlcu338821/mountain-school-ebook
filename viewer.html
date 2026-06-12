@@ -663,15 +663,22 @@ document.addEventListener('fullscreenchange', () => {
 });
 
 // 監聽 viewer-wrap 尺寸變化（含全螢幕切換、視窗縮放）
+let isFirstResize = true; // 【新增】這是一個開關，記錄是不是第一次觸發
+
 const resizeObserver = new ResizeObserver(entries => {
   for (const entry of entries) {
+    
+    // 【新增】如果是剛載入時的第一次觸發，就把開關關掉，然後直接「跳過」不做事！
+    if (isFirstResize) {
+      isFirstResize = false;
+      continue; 
+    }
+
     const { width, height } = entry.contentRect;
     if (width > 0 && height > 0) {
       applySize(width, height);
     }
   }
-});
-resizeObserver.observe(viewerWrap);
-</script>
+});</script>
 </body>
 </html>
