@@ -438,6 +438,13 @@ async function init() {
   document.getElementById('loading').style.display = 'none';
   updateUI(0);
 
+  // 強制讓套件在初始渲染後重新計算座標，修正第一頁翻頁跳動的問題
+  setTimeout(() => {
+    if (pageFlip) {
+      pageFlip.update();
+    }
+  }, 100);
+
   if (!isMobile) {
     initMagnifier(container, loadedImages, pageW, pageH, isMobile);
   } else {
