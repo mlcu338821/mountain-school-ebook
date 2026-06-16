@@ -438,13 +438,6 @@ async function init() {
   document.getElementById('loading').style.display = 'none';
   updateUI(0);
 
-  // 強制讓套件在初始渲染後重新計算座標，修正第一頁翻頁跳動的問題
-  setTimeout(() => {
-    if (pageFlip) {
-      pageFlip.update();
-    }
-  }, 100);
-
   if (!isMobile) {
     initMagnifier(container, loadedImages, pageW, pageH, isMobile);
   } else {
@@ -627,7 +620,32 @@ function showError() {
 }
 
 document.getElementById('btn-prev').addEventListener('click', () => pageFlip && pageFlip.flipPrev());
-document.getElementById('btn-next').addEventListener('click', () => pageFlip && pageFlip.flipNext());
+document.getElementById('btn-next').addEventListener('click', () => {
+  if (!pageFlip) return;
+
+  // 針對「桌面版、由右至左 (RTL)、且在第一頁封面」時的套件 Bug 進行修復
+  if (!isMobile && pageFlip.getCurrentPageIndex() === 0) {
+    const container = document.getElementById('book-container');
+    const rect = container.getBoundingClientRect();
+    
+    // 由於封面被往右推到了畫面中間，書頁真正的左邊緣大約在容器寬度的 1/4 處
+    // 我們往內加 20px，確保點擊範圍落在書本的「翻頁感應區」內
+    const targetX = rect.left + (rect.width / 4) + 20; 
+    const targetY = rect.bottom - 20;
+
+    // 模擬真實的滑鼠點擊，直接點在書頁左下角，強迫套件從正確座標產生翻頁陰影
+    const wrapper = container.querySelector('.stf__wrapper') || container;
+    wrapper.dispatchEvent(new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      clientX: targetX,
+      clientY: targetY
+    }));
+  } else {
+    // 其他頁面或手機版維持正常呼叫，不受影響
+    pageFlip.flipNext();
+  }
+});
 
 document.addEventListener('keydown', e => {
   if (!pageFlip) return;
