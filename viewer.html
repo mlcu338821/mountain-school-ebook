@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>閱讀 — 山野是一所學校</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,8 +26,7 @@
     background: var(--ink);
     color: var(--paper);
     font-family: var(--sans);
-    overflow: auto; 
-    overscroll-behavior-y: none; /* 防止手機下拉重新整理干擾 */
+    overflow: hidden;
   }
 
   #topbar {
@@ -72,17 +71,12 @@
     color: var(--ink-faint);
   }
 
-  #viewer-wrap { 
-    position: fixed; 
-    top: 52px; 
-    left: 0; 
-    right: 0; 
-    bottom: 52px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    /* 新增下面這行，讓放大後可以出現隱藏捲軸滑動 */
-    overflow: auto; 
+  #viewer-wrap {
+    position: fixed;
+    top: 52px; left: 0; right: 0; bottom: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   #book-container { position: relative; }
@@ -441,14 +435,6 @@ document.addEventListener('keydown', e => {
 });
 
 init();
-
-// 【手機版專屬補丁】防止 st.pageflip 綁架雙指縮放手勢
-  document.getElementById('viewer-wrap').addEventListener('touchstart', (e) => {
-    if (e.touches.length > 1) {
-      // 偵測到兩指以上，立刻阻止事件傳遞給翻頁套件
-      e.stopPropagation(); 
-    }
-  }, { passive: false });
 </script>
 </body>
 </html>
