@@ -90,7 +90,7 @@
   }
   .mobile-slider {
     display: flex;
-    flex-direction: row-reverse; /* 符合右翻書 RTL 邏輯 */
+    flex-direction: row; /* 修改：由左往右（左翻書 LTR 邏輯） */
     width: 100%; height: 100%;
     transition: transform 0.3s ease;
   }
@@ -329,8 +329,8 @@ class MobileViewer {
   }
 
   updateTransform() {
-    // 搭配 flex-direction: row-reverse 實現右翻書 (向右滑前往下一頁)
-    this.slider.style.transform = `translateX(${this.currentIndex * 100}%)`;
+    // 修改：左翻書（LTR）負位移
+    this.slider.style.transform = `translateX(-${this.currentIndex * 100}%)`;
   }
 
   resetZoom(img) {
@@ -399,7 +399,8 @@ class MobileViewer {
         } else {
           // 未放大的狀態下進行左右滑動預覽
           this.slider.style.transition = 'none';
-          this.slider.style.transform = `translateX(calc(${this.currentIndex * 100}% + ${dx}px))`;
+          // 修改：配合左翻書（LTR）計算預覽位移
+          this.slider.style.transform = `translateX(calc(-${this.currentIndex * 100}% + ${dx}px))`;
         }
       }
     }, { passive: false });
@@ -412,10 +413,10 @@ class MobileViewer {
          const dx = e.changedTouches[0].clientX - startX;
          this.slider.style.transition = 'transform 0.3s ease';
          
-         // 根據 RTL 邏輯：向右滑 (dx > 50) 為下一頁，向左滑為上一頁
-         if (dx > 50 && index < this.pages.length - 1) {
+         // 修改：根據左翻書（LTR）邏輯：向左滑 (dx < -50) 為下一頁，向右滑 (dx > 50) 為上一頁
+         if (dx < -50 && index < this.pages.length - 1) {
            this.goTo(index + 1);
-         } else if (dx < -50 && index > 0) {
+         } else if (dx > 50 && index > 0) {
            this.goTo(index - 1);
          } else {
            this.updateTransform(); // 滑動距離不足，彈回當前頁面
@@ -471,7 +472,7 @@ function initDesktop(pages) {
     disableFlipByClick: false,
     startPage: 0,
     drawShadow: true,
-    direction: 'rtl',
+    direction: 'ltr', // 修改：這裡改為 'ltr' 啟動桌機版左翻書效果
   });
 
   pageFlip.loadFromHTML(container.querySelectorAll('.page'));
@@ -526,8 +527,10 @@ function initMagnifier(container, pageW, pageH) {
 
     const currentIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
     const isCover = currentIndex === 0;
-    const isRightPage = !isCover && relX > halfW;
-    const pageIndex = currentIndex + (isRightPage ? 1 : 0);
+    
+    // 修改：左翻書（LTR）狀態下，右邊是下一頁
+    const isNextPage = !isCover && relX > halfW;
+    const pageIndex = currentIndex + (isNextPage ? 1 : 0);
 
     const imgs = container.querySelectorAll('.page img');
     const img = imgs[pageIndex];
@@ -537,7 +540,7 @@ function initMagnifier(container, pageW, pageH) {
       return;
     }
 
-    const pageRelX = isRightPage ? relX - halfW : relX;
+    const pageRelX = isNextPage ? relX - halfW : relX;
     const srcX = (pageRelX / halfW) * img.naturalWidth;
     const srcY = (relY / fullH) * img.naturalHeight;
 
