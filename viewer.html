@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>閱讀 — 山野是一所學校</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,6 +27,7 @@
     color: var(--paper);
     font-family: var(--sans);
     overflow: hidden;
+    touch-action: none; /* 防止原生縮放與滑動干擾 */
   }
 
   #topbar {
@@ -80,6 +81,37 @@
   }
 
   #book-container { position: relative; }
+
+  /* 手機版滑動容器 */
+  #mobile-viewer-wrap {
+    display: none;
+    width: 100%; height: 100%;
+    overflow: hidden;
+  }
+  .mobile-slider {
+    display: flex;
+    flex-direction: row-reverse; /* 符合右翻書 RTL 邏輯 */
+    width: 100%; height: 100%;
+    transition: transform 0.3s ease;
+  }
+  .mobile-slide {
+    flex: 0 0 100%;
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .mobile-slide img {
+    max-width: 100%; max-height: 100%;
+    object-fit: contain;
+    transform-origin: center;
+    pointer-events: auto;
+  }
+  .mobile-slide img.resetting {
+    transition: transform 0.3s ease-out;
+  }
 
   #controls {
     position: fixed;
@@ -158,7 +190,6 @@
   #error p { color: var(--ink-faint); font-size: 0.85rem; letter-spacing: 0.1em; text-align: center; line-height: 2; }
   #error a { color: var(--ink-faint); }
 
-  /* 放大鏡 */
   #magnifier {
     position: fixed;
     width: 220px; height: 220px;
@@ -199,6 +230,7 @@
 
 <div id="viewer-wrap">
   <div id="book-container"></div>
+  <div id="mobile-viewer-wrap"></div>
 </div>
 
 <div id="magnifier"><canvas id="mag-canvas" width="220" height="220"></canvas></div>
@@ -224,6 +256,9 @@ document.getElementById('vol-title').textContent = vol || '山野是一所學校
 document.title = (vol || '閱讀') + ' — 山野是一所學校';
 
 const EXTS = ['jpg', 'jpeg', 'png', 'webp'];
+let pageFlip = null;
+let mobileViewer = null;
+let totalPages = 0;
 
 function testImage(url) {
   return new Promise(resolve => {
@@ -250,9 +285,6 @@ async function findPages() {
   return pages;
 }
 
-let pageFlip = null;
-let totalPages = 0;
-
 function updateUI(currentPage) {
   document.getElementById('page-info').textContent = `第 ${currentPage + 1} 頁 / 共 ${totalPages} 頁`;
   document.getElementById('progress-fill').style.width = ((currentPage + 1) / totalPages * 100) + '%';
@@ -260,48 +292,163 @@ function updateUI(currentPage) {
   document.getElementById('btn-next').disabled = currentPage >= totalPages - 1;
 }
 
-async function init() {
-  if (!folder) { showError(); return; }
-  const pages = await findPages();
-  if (!pages.length) { showError(); return; }
+// --- 手機版專屬視圖與觸控邏輯 ---
+class MobileViewer {
+  constructor(container, pages) {
+    this.pages = pages;
+    this.currentIndex = 0;
+    
+    container.style.display = 'block';
+    container.innerHTML = `<div class="mobile-slider"></div>`;
+    this.slider = container.querySelector('.mobile-slider');
 
-  totalPages = pages.length;
-  const isMobile = window.innerWidth < 700;
+    pages.forEach((url, idx) => {
+      const slide = document.createElement('div');
+      slide.className = 'mobile-slide';
+      const img = document.createElement('img');
+      img.src = url;
+      img.draggable = false;
+      slide.appendChild(img);
+      this.slider.appendChild(slide);
+      this.bindGestures(slide, img, idx);
+    });
+
+    this.updateTransform();
+  }
+
+  goTo(index) {
+    if (index < 0 || index >= this.pages.length) return;
+    this.currentIndex = index;
+    this.updateTransform();
+    updateUI(this.currentIndex);
+    
+    // 換頁時重置所有圖片縮放
+    this.slider.querySelectorAll('.mobile-slide img').forEach(img => {
+      if (parseFloat(img.dataset.scale || 1) > 1) this.resetZoom(img);
+    });
+  }
+
+  updateTransform() {
+    // 搭配 flex-direction: row-reverse 實現右翻書 (向右滑前往下一頁)
+    this.slider.style.transform = `translateX(${this.currentIndex * 100}%)`;
+  }
+
+  resetZoom(img) {
+    img.classList.add('resetting');
+    img.style.transform = `translate(0px, 0px) scale(1)`;
+    img.dataset.scale = 1;
+    setTimeout(() => img.classList.remove('resetting'), 300);
+  }
+
+  bindGestures(slide, img, index) {
+    let scale = 1, tx = 0, ty = 0;
+    let initialDist = 0, initialScale = 1;
+    let startX = 0, startY = 0;
+    let lastTx = 0, lastTy = 0;
+    let lastTap = 0;
+    let isPinching = false;
+
+    const applyTransform = (s, x, y) => {
+      img.style.transform = `translate(${x}px, ${y}px) scale(${s})`;
+      img.dataset.scale = s;
+    };
+
+    slide.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        isPinching = true;
+        initialDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialScale = scale;
+      } else if (e.touches.length === 1) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        lastTx = tx;
+        lastTy = ty;
+
+        const now = Date.now();
+        if (now - lastTap < 300) {
+          scale = 1; tx = 0; ty = 0;
+          this.resetZoom(img);
+          e.preventDefault();
+        }
+        lastTap = now;
+      }
+    }, { passive: false });
+
+    slide.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // 全面防止原生滑動干擾
+      
+      if (isPinching && e.touches.length === 2) {
+        const dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        scale = Math.max(1, Math.min(initialScale * (dist / initialDist), 5));
+        applyTransform(scale, tx, ty);
+      } else if (e.touches.length === 1) {
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+
+        if (scale > 1) {
+          // 放大的狀態下進行拖曳平移
+          tx = lastTx + dx;
+          ty = lastTy + dy;
+          applyTransform(scale, tx, ty);
+        } else {
+          // 未放大的狀態下進行左右滑動預覽
+          this.slider.style.transition = 'none';
+          this.slider.style.transform = `translateX(calc(${this.currentIndex * 100}% + ${dx}px))`;
+        }
+      }
+    }, { passive: false });
+
+    slide.addEventListener('touchend', (e) => {
+      if (isPinching && e.touches.length < 2) {
+        isPinching = false;
+      }
+      if (!isPinching && scale === 1) {
+         const dx = e.changedTouches[0].clientX - startX;
+         this.slider.style.transition = 'transform 0.3s ease';
+         
+         // 根據 RTL 邏輯：向右滑 (dx > 50) 為下一頁，向左滑為上一頁
+         if (dx > 50 && index < this.pages.length - 1) {
+           this.goTo(index + 1);
+         } else if (dx < -50 && index > 0) {
+           this.goTo(index - 1);
+         } else {
+           this.updateTransform(); // 滑動距離不足，彈回當前頁面
+         }
+      }
+    });
+  }
+}
+// --- 手機版邏輯結束 ---
+
+function initDesktop(pages) {
+  const container = document.getElementById('book-container');
   const vw = window.innerWidth;
   const vh = window.innerHeight - 104;
   const PAGE_RATIO = 420 / 297;
-
-  let pageW, pageH;
-  if (isMobile) {
-    pageW = Math.floor(vw * 0.95);
+  
+  let pageH = Math.min(vh * 0.9, 700);
+  let pageW = Math.round(pageH / PAGE_RATIO);
+  if (pageW * 2 > vw * 0.9) {
+    pageW = Math.floor(vw * 0.9 / 2);
     pageH = Math.round(pageW * PAGE_RATIO);
-    if (pageH > vh * 0.95) {
-      pageH = Math.floor(vh * 0.95);
-      pageW = Math.round(pageH / PAGE_RATIO);
-    }
-  } else {
-    pageH = Math.min(vh * 0.9, 700);
-    pageW = Math.round(pageH / PAGE_RATIO);
-    if (pageW * 2 > vw * 0.9) {
-      pageW = Math.floor(vw * 0.9 / 2);
-      pageH = Math.round(pageW * PAGE_RATIO);
-    }
   }
 
-  const container = document.getElementById('book-container');
-  container.style.width = (isMobile ? pageW : pageW * 2) + 'px';
+  container.style.width = (pageW * 2) + 'px';
   container.style.height = pageH + 'px';
 
-  const loadedImages = [];
   pages.forEach((url, idx) => {
     const page = document.createElement('div');
     page.className = 'page';
-    page.dataset.index = idx;
     const img = document.createElement('img');
     img.src = url;
     img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
     img.draggable = false;
-    loadedImages.push(img);
     page.appendChild(img);
     container.appendChild(page);
   });
@@ -314,7 +461,7 @@ async function init() {
     minHeight: pageH, maxHeight: pageH,
     showCover: true,
     flippingTime: 700,
-    usePortrait: isMobile,
+    usePortrait: false,
     startZIndex: 0,
     autoSize: false,
     clickEventForward: true,
@@ -325,24 +472,16 @@ async function init() {
     startPage: 0,
     drawShadow: true,
     direction: 'rtl',
-    mobileScrollSupport: true,
   });
 
   pageFlip.loadFromHTML(container.querySelectorAll('.page'));
   pageFlip.on('flip', e => updateUI(e.data));
   pageFlip.on('changeState', () => updateUI(pageFlip.getCurrentPageIndex()));
 
-  document.getElementById('loading').style.display = 'none';
-  updateUI(0);
-
-  if (!isMobile) {
-    initMagnifier(container, pageW, pageH);
-  } else {
-    document.getElementById('btn-magnifier').style.display = 'none';
-  }
+  initMagnifier(container, pageW, pageH);
 }
 
-function initMagnifier(container, initPageW, initPageH) {
+function initMagnifier(container, pageW, pageH) {
   const magnifier = document.getElementById('magnifier');
   const canvas = document.getElementById('mag-canvas');
   const ctx = canvas.getContext('2d');
@@ -380,14 +519,14 @@ function initMagnifier(container, initPageW, initPageH) {
   function drawMagnifier() {
     rafId = null;
     const rect = container.getBoundingClientRect();
-    const pageW = rect.width / 2;
-    const pageH = rect.height;
+    const halfW = rect.width / 2;
+    const fullH = rect.height;
     const relX = mouseX - rect.left;
     const relY = mouseY - rect.top;
 
     const currentIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
     const isCover = currentIndex === 0;
-    const isRightPage = !isCover && relX > pageW;
+    const isRightPage = !isCover && relX > halfW;
     const pageIndex = currentIndex + (isRightPage ? 1 : 0);
 
     const imgs = container.querySelectorAll('.page img');
@@ -398,13 +537,11 @@ function initMagnifier(container, initPageW, initPageH) {
       return;
     }
 
-    const pageRelX = isRightPage ? relX - pageW : relX;
-    const pageRelY = relY;
+    const pageRelX = isRightPage ? relX - halfW : relX;
+    const srcX = (pageRelX / halfW) * img.naturalWidth;
+    const srcY = (relY / fullH) * img.naturalHeight;
 
-    const srcX = (pageRelX / pageW) * img.naturalWidth;
-    const srcY = (pageRelY / pageH) * img.naturalHeight;
-
-    const pxPerScreen = img.naturalWidth / pageW;
+    const pxPerScreen = img.naturalWidth / halfW;
     const srcSize = (MAG_SIZE / MAG_ZOOM) * pxPerScreen;
 
     const sx = Math.max(0, Math.min(srcX - srcSize / 2, img.naturalWidth - srcSize));
@@ -425,13 +562,46 @@ function showError() {
   document.getElementById('error').style.display = 'flex';
 }
 
-document.getElementById('btn-prev').addEventListener('click', () => pageFlip && pageFlip.flipPrev());
-document.getElementById('btn-next').addEventListener('click', () => pageFlip && pageFlip.flipNext());
+async function init() {
+  if (!folder) { showError(); return; }
+  const pages = await findPages();
+  if (!pages.length) { showError(); return; }
 
+  totalPages = pages.length;
+  const isMobile = window.innerWidth < 700;
+
+  if (isMobile) {
+    document.getElementById('book-container').style.display = 'none';
+    document.getElementById('btn-magnifier').style.display = 'none';
+    mobileViewer = new MobileViewer(document.getElementById('mobile-viewer-wrap'), pages);
+  } else {
+    initDesktop(pages);
+  }
+
+  document.getElementById('loading').style.display = 'none';
+  updateUI(0);
+}
+
+// 綁定底部控制按鈕
+document.getElementById('btn-prev').addEventListener('click', () => {
+  if (pageFlip) pageFlip.flipPrev();
+  if (mobileViewer) mobileViewer.goTo(mobileViewer.currentIndex - 1);
+});
+document.getElementById('btn-next').addEventListener('click', () => {
+  if (pageFlip) pageFlip.flipNext();
+  if (mobileViewer) mobileViewer.goTo(mobileViewer.currentIndex + 1);
+});
+
+// 綁定鍵盤控制
 document.addEventListener('keydown', e => {
-  if (!pageFlip) return;
-  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') pageFlip.flipPrev();
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') pageFlip.flipNext();
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    if (pageFlip) pageFlip.flipPrev();
+    if (mobileViewer) mobileViewer.goTo(mobileViewer.currentIndex - 1);
+  }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+    if (pageFlip) pageFlip.flipNext();
+    if (mobileViewer) mobileViewer.goTo(mobileViewer.currentIndex + 1);
+  }
 });
 
 init();
