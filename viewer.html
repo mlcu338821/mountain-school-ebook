@@ -22,39 +22,223 @@
     --sans: 'Noto Sans TC', sans-serif;
   }
 
-  html, body { height: 100%; background: var(--ink); color: var(--paper); font-family: var(--sans); overflow: hidden; }
+  html, body {
+    height: 100%;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--sans);
+    overflow: hidden;
+  }
 
-  #topbar { position: fixed; top: 0; left: 0; right: 0; height: 52px; background: rgba(26,22,18,0.95); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(200,191,176,0.15); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; z-index: 100; }
+  /* top bar */
+  #topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    background: rgba(26,22,18,0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(200,191,176,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    z-index: 100;
+  }
+
   .topbar-left { display: flex; align-items: center; gap: 1rem; }
-  .back-btn { font-size: 0.75rem; letter-spacing: 0.1em; color: var(--ink-faint); text-decoration: none; display: flex; align-items: center; gap: 0.4rem; transition: color 0.2s; }
+
+  .back-btn {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: color 0.2s;
+  }
   .back-btn:hover { color: var(--paper); }
   .back-btn::before { content: '←'; }
+
   .divider { width: 1px; height: 16px; background: rgba(200,191,176,0.2); }
-  #vol-title { font-family: var(--serif); font-size: 0.85rem; font-weight: 300; letter-spacing: 0.1em; color: var(--ink-faint); }
-  #page-info { font-size: 0.75rem; letter-spacing: 0.1em; color: var(--ink-faint); }
 
-  #viewer-wrap { position: fixed; top: 52px; left: 0; right: 0; bottom: 52px; display: flex; align-items: center; justify-content: center; }
-  #book-container { position: relative; }
+  #vol-title {
+    font-family: var(--serif);
+    font-size: 0.85rem;
+    font-weight: 300;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+  }
 
-  #controls { position: fixed; bottom: 0; left: 0; right: 0; height: 52px; background: rgba(26,22,18,0.95); backdrop-filter: blur(8px); border-top: 1px solid rgba(200,191,176,0.15); display: flex; align-items: center; justify-content: center; gap: 2rem; z-index: 100; }
-  .ctrl-btn { background: none; border: 1px solid rgba(200,191,176,0.25); color: var(--ink-faint); width: 36px; height: 36px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-  .ctrl-btn:hover:not(:disabled) { border-color: var(--paper); color: var(--paper); }
+  #page-info {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+  }
+
+  /* viewer area */
+  #viewer-wrap {
+    position: fixed;
+    top: 52px; left: 0; right: 0; bottom: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #viewer-wrap:fullscreen,
+  #viewer-wrap.is-fullscreen {
+    top: 0; bottom: 0;
+    background: var(--ink);
+  }
+
+  #book-container {
+    position: relative;
+  }
+
+  /* bottom controls */
+  #controls {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 52px;
+    background: rgba(26,22,18,0.95);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(200,191,176,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    z-index: 100;
+  }
+
+  .ctrl-btn {
+    background: none;
+    border: 1px solid rgba(200,191,176,0.25);
+    color: var(--ink-faint);
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .ctrl-btn:hover:not(:disabled) {
+    border-color: var(--paper);
+    color: var(--paper);
+  }
   .ctrl-btn:disabled { opacity: 0.2; cursor: default; }
-  
-  #progress-wrap { display: flex; align-items: center; gap: 0.75rem; }
-  #progress { width: 120px; height: 1px; background: rgba(200,191,176,0.2); position: relative; }
-  #progress-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink-faint); transition: width 0.3s; }
+  .ctrl-btn.active {
+    border-color: var(--ink-faint);
+    color: var(--paper);
+    background: rgba(200,191,176,0.1);
+  }
 
-  #loading { position: fixed; inset: 0; background: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; z-index: 200; }
-  #magnifier { position: fixed; width: 220px; height: 220px; border-radius: 50%; border: 1.5px solid rgba(200,191,176,0.5); box-shadow: 0 4px 24px rgba(0,0,0,0.6); overflow: hidden; pointer-events: none; display: none; z-index: 300; transform: translate(-50%, -50%); background: #000; }
-  #magnifier canvas { position: absolute; top: 0; left: 0; border-radius: 50%; }
-  body.magnifier-on #book-container { cursor: none; }
+  #progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  #progress {
+    width: 120px;
+    height: 1px;
+    background: rgba(200,191,176,0.2);
+    position: relative;
+  }
+  #progress-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--ink-faint);
+    transition: width 0.3s;
+  }
+
+  /* loading */
+  #loading {
+    position: fixed;
+    inset: 0;
+    background: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    z-index: 200;
+  }
+  #loading-title {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    color: var(--ink-faint);
+  }
+  #loading-bar-wrap {
+    width: 160px;
+    height: 1px;
+    background: rgba(200,191,176,0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  #loading-bar {
+    position: absolute;
+    left: -100%;
+    top: 0; bottom: 0;
+    width: 100%;
+    background: var(--ink-faint);
+    animation: slide 1.2s ease-in-out infinite;
+  }
+  @keyframes slide { to { left: 100%; } }
+
+  /* error */
+  #error {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--ink);
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+    z-index: 200;
+  }
+  #error p { color: var(--ink-faint); font-size: 0.85rem; letter-spacing: 0.1em; text-align: center; line-height: 2; }
+  #error a { color: var(--ink-faint); }
+
+  /* 放大鏡 */
+  #magnifier {
+    position: fixed;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(200,191,176,0.5);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05);
+    overflow: hidden;
+    pointer-events: none;
+    display: none;
+    z-index: 300;
+    transform: translate(-50%, -50%);
+    background: #000;
+  }
+  #magnifier canvas {
+    position: absolute;
+    top: 0; left: 0;
+    border-radius: 50%;
+  }
+
+  /* 桌機才有放大鏡游標效果 */
+  body.magnifier-on #book-container {
+    cursor: none;
+  }
 </style>
 </head>
 <body>
 
 <div id="loading">
-  <div style="font-family: var(--serif); color: var(--ink-faint);">山野是一所學校</div>
+  <div id="loading-title">山野是一所學校</div>
+  <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
+</div>
+
+<div id="error">
+  <p>找不到此期圖片。<br>請確認 issues 資料夾中有對應的圖片檔案。<br><br><a href="index.html">← 返回首頁</a></p>
 </div>
 
 <div id="topbar">
@@ -70,6 +254,7 @@
   <div id="book-container"></div>
 </div>
 
+<!-- 放大鏡元素 -->
 <div id="magnifier"><canvas id="mag-canvas" width="220" height="220"></canvas></div>
 
 <div id="controls">
@@ -80,7 +265,22 @@
   <button class="ctrl-btn" id="btn-next" title="下一頁">›</button>
   <button class="ctrl-btn" id="btn-magnifier" title="放大鏡">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-      <circle cx="6.5" cy="6.5" r="4.5"/><line x1="10" y1="10" x2="14" y2="14"/>
+      <circle cx="6.5" cy="6.5" r="4.5"/>
+      <line x1="10" y1="10" x2="14" y2="14"/>
+    </svg>
+  </button>
+  <button class="ctrl-btn" id="btn-fullscreen" title="全螢幕">
+    <svg id="icon-enter" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="1,5 1,1 5,1"/>
+      <polyline points="11,1 15,1 15,5"/>
+      <polyline points="15,11 15,15 11,15"/>
+      <polyline points="5,15 1,15 1,11"/>
+    </svg>
+    <svg id="icon-exit" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+      <polyline points="5,1 1,1 1,5"/>
+      <polyline points="15,5 15,1 11,1"/>
+      <polyline points="11,15 15,15 15,11"/>
+      <polyline points="1,11 1,15 5,15"/>
     </svg>
   </button>
 </div>
@@ -94,39 +294,69 @@ document.getElementById('vol-title').textContent = vol || '山野是一所學校
 document.title = (vol || '閱讀') + ' — 山野是一所學校';
 
 const EXTS = ['jpg', 'jpeg', 'png', 'webp'];
-async function testImage(url) {
-  return new Promise(resolve => { const img = new Image(); img.onload = () => resolve(true); img.onerror = () => resolve(false); img.src = url; });
+
+function testImage(url) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
 }
 
 async function findPages() {
   const pages = [];
-  for (let i = 1; i <= 200; i++) {
+  let i = 1;
+  while (true) {
     const num = String(i).padStart(2, '0');
     let found = false;
     for (const ext of EXTS) {
       const url = `issues/${folder}/page-${num}.${ext}`;
-      if (await testImage(url)) { pages.push(url); found = true; break; }
+      if (await testImage(url)) {
+        pages.push(url);
+        found = true;
+        break;
+      }
     }
     if (!found) break;
+    i++;
+    if (i > 200) break;
   }
   return pages;
 }
 
-let pageFlip = null, totalPages = 0, isMobile = false;
-const PAGE_RATIO = 420 / 297;
+let pageFlip = null;
+let totalPages = 0;
+let isMobile = false;
+const PAGE_RATIO = 420 / 297; // A3 橫式
 
-function applySize(availW, availH) {
-  const container = document.getElementById('book-container');
+// 根據 viewer-wrap 實際可用空間計算書本尺寸
+function calcSize(availW, availH) {
   let pageW, pageH;
   if (isMobile) {
-    pageW = Math.floor(availW * 0.95); pageH = Math.round(pageW * PAGE_RATIO);
+    pageW = Math.floor(availW * 0.95);
+    pageH = Math.round(pageW * PAGE_RATIO);
+    if (pageH > availH * 0.95) {
+      pageH = Math.floor(availH * 0.95);
+      pageW = Math.round(pageH / PAGE_RATIO);
+    }
   } else {
-    pageH = availH * 0.95; pageW = Math.round(pageH / PAGE_RATIO);
-    if (pageW * 2 > availW * 0.95) { pageW = Math.floor(availW * 0.95 / 2); pageH = Math.round(pageW * PAGE_RATIO); }
+    pageH = availH * 0.95;
+    pageW = Math.round(pageH / PAGE_RATIO);
+    if (pageW * 2 > availW * 0.95) {
+      pageW = Math.floor(availW * 0.95 / 2);
+      pageH = Math.round(pageW * PAGE_RATIO);
+    }
   }
+  return { pageW, pageH };
+}
+
+// 直接套用容器尺寸，讓 StPageFlip (size: 'stretch') 自動適應
+function applySize(availW, availH) {
+  const container = document.getElementById('book-container');
+  const { pageW, pageH } = calcSize(availW, availH);
   container.style.width = (isMobile ? pageW : pageW * 2) + 'px';
   container.style.height = pageH + 'px';
-  if (pageFlip) pageFlip.update();
 }
 
 function updateUI(currentPage) {
@@ -137,33 +367,304 @@ function updateUI(currentPage) {
 }
 
 async function init() {
-  if (!folder) return;
+  if (!folder) { showError(); return; }
+
   const pages = await findPages();
+  if (!pages.length) { showError(); return; }
+
   totalPages = pages.length;
+
   isMobile = window.innerWidth < 700;
+
+  const wrap = document.getElementById('viewer-wrap');
   const container = document.getElementById('book-container');
-  
+  applySize(wrap.clientWidth, wrap.clientHeight);
+  const { pageW, pageH } = calcSize(wrap.clientWidth, wrap.clientHeight);
+
+  // 預載圖片並記錄
+  const loadedImages = [];
+
   pages.forEach((url, idx) => {
     const page = document.createElement('div');
     page.className = 'page';
-    page.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+    page.dataset.index = idx;
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+    img.draggable = false;
+    loadedImages.push(img);
+    page.appendChild(img);
     container.appendChild(page);
   });
 
   pageFlip = new St.PageFlip(container, {
-    width: 420, height: 297, size: 'stretch', showCover: true, 
-    usePortrait: isMobile, direction: 'rtl',
+    width: pageW,
+    height: pageH,
+    size: 'stretch',
+    minWidth: 200,
+    maxWidth: 3000,
+    minHeight: 200,
+    maxHeight: 3000,
+    showCover: true,
+    flippingTime: 700,
+    usePortrait: isMobile,
+    startZIndex: 0,
+    clickEventForward: true,
+    useMouseEvents: true,
+    swipeDistance: 30,
+    showPageCorners: true,
+    disableFlipByClick: false,
+    startPage: 0,
+    drawShadow: true,
+    direction: 'rtl',
+    mobileScrollSupport: true,
   });
+
   pageFlip.loadFromHTML(container.querySelectorAll('.page'));
   pageFlip.on('flip', e => updateUI(e.data));
-  
+  pageFlip.on('changeState', () => updateUI(pageFlip.getCurrentPageIndex()));
+
   document.getElementById('loading').style.display = 'none';
   updateUI(0);
+
+  // ---- 放大鏡 ----
+  if (!isMobile) {
+    initMagnifier(container, loadedImages, pageW, pageH, isMobile);
+  } else {
+    document.getElementById('btn-magnifier').style.display = 'none';
+    document.getElementById('btn-fullscreen').style.display = 'none';
+    initPinchZoom(container);
+  }
 }
 
-document.getElementById('btn-prev').addEventListener('click', () => pageFlip.flipPrev());
-document.getElementById('btn-next').addEventListener('click', () => pageFlip.flipNext());
+// ---- 手機雙指縮放 ----
+function initPinchZoom(container) {
+  let scale = 1;
+  let lastScale = 1;
+  let originX = 0, originY = 0;
+  let translateX = 0, translateY = 0;
+  let lastTranslateX = 0, lastTranslateY = 0;
+
+  // 記錄兩指中心
+  function getMidpoint(t1, t2) {
+    return {
+      x: (t1.clientX + t2.clientX) / 2,
+      y: (t1.clientY + t2.clientY) / 2
+    };
+  }
+  function getDist(t1, t2) {
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  let initDist = 0;
+  let initMid = { x: 0, y: 0 };
+  let isPinching = false;
+
+  container.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      isPinching = true;
+      initDist = getDist(e.touches[0], e.touches[1]);
+      initMid = getMidpoint(e.touches[0], e.touches[1]);
+      lastScale = scale;
+      lastTranslateX = translateX;
+      lastTranslateY = translateY;
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchmove', e => {
+    if (!isPinching || e.touches.length !== 2) return;
+    e.preventDefault();
+
+    const newDist = getDist(e.touches[0], e.touches[1]);
+    const newMid = getMidpoint(e.touches[0], e.touches[1]);
+
+    scale = Math.max(1, Math.min(4, lastScale * (newDist / initDist)));
+
+    // 平移：讓縮放中心點保持在手指中間
+    translateX = lastTranslateX + (newMid.x - initMid.x);
+    translateY = lastTranslateY + (newMid.y - initMid.y);
+
+    applyTransform();
+  }, { passive: false });
+
+  container.addEventListener('touchend', e => {
+    if (e.touches.length < 2) {
+      isPinching = false;
+      // 縮回 1x 時重置位置
+      if (scale <= 1) {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        applyTransform();
+      }
+    }
+  });
+
+  // 雙擊重置
+  let lastTap = 0;
+  container.addEventListener('touchend', e => {
+    const now = Date.now();
+    if (now - lastTap < 300 && e.touches.length === 0) {
+      scale = 1;
+      translateX = 0;
+      translateY = 0;
+      applyTransform();
+    }
+    lastTap = now;
+  });
+
+  function applyTransform() {
+    container.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    container.style.transformOrigin = 'center center';
+    container.style.transition = isPinching ? 'none' : 'transform 0.2s ease';
+  }
+}
+
+function initMagnifier(container, loadedImages, initPageW, initPageH, isMobile) {
+  const magnifier = document.getElementById('magnifier');
+  const canvas = document.getElementById('mag-canvas');
+  const ctx = canvas.getContext('2d');
+  const MAG_SIZE = 220;
+  const MAG_ZOOM = 2.5;
+  let magOn = false;
+  let mouseX = 0, mouseY = 0;
+  let rafId = null;
+
+  document.getElementById('btn-magnifier').addEventListener('click', () => {
+    magOn = !magOn;
+    document.getElementById('btn-magnifier').classList.toggle('active', magOn);
+    document.body.classList.toggle('magnifier-on', magOn);
+    if (!magOn) {
+      magnifier.style.display = 'none';
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    }
+  });
+
+  container.addEventListener('mousemove', e => {
+    if (!magOn) return;
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    magnifier.style.left = mouseX + 'px';
+    magnifier.style.top = mouseY + 'px';
+    magnifier.style.display = 'block';
+    if (!rafId) drawMagnifier();
+  });
+
+  container.addEventListener('mouseleave', () => {
+    magnifier.style.display = 'none';
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  });
+
+  function drawMagnifier() {
+    rafId = null;
+    // 取得 book-container 的位置（即時尺寸，支援全螢幕後變化）
+    const rect = container.getBoundingClientRect();
+    const pageW = rect.width / 2;
+    const pageH = rect.height;
+    const relX = mouseX - rect.left;
+    const relY = mouseY - rect.top;
+
+    // 判斷游標在哪一頁（左頁或右頁）
+    const currentIndex = pageFlip ? pageFlip.getCurrentPageIndex() : 0;
+    const isCover = currentIndex === 0; // 封面是單頁，左側沒有內容
+    const isRightPage = !isCover && relX > pageW;
+    const pageIndex = currentIndex + (isRightPage ? 1 : 0);
+    const imgs = container.querySelectorAll('.page img');
+    const img = imgs[pageIndex];
+
+    if (!img || !img.complete || img.naturalWidth === 0) {
+      rafId = requestAnimationFrame(drawMagnifier);
+      return;
+    }
+
+    // 游標在該頁的相對位置
+    const pageRelX = isRightPage ? relX - pageW : relX;
+    const pageRelY = relY;
+
+    // 游標對應到圖片的真實像素座標
+    const srcX = (pageRelX / pageW) * img.naturalWidth;
+    const srcY = (pageRelY / pageH) * img.naturalHeight;
+
+    // 用「像素/螢幕像素」的比例算出放大鏡視窗對應多大的來源區域
+    // 保持正方形，避免變形
+    const pxPerScreen = img.naturalWidth / pageW; // 圖片像素 / 螢幕像素
+    const srcSize = (MAG_SIZE / MAG_ZOOM) * pxPerScreen;
+
+    const sx = Math.max(0, Math.min(srcX - srcSize / 2, img.naturalWidth - srcSize));
+    const sy = Math.max(0, Math.min(srcY - srcSize / 2, img.naturalHeight - srcSize));
+
+    ctx.clearRect(0, 0, MAG_SIZE, MAG_SIZE);
+
+    // 裁切圓形
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(MAG_SIZE / 2, MAG_SIZE / 2, MAG_SIZE / 2, 0, Math.PI * 2);
+    ctx.clip();
+
+    ctx.drawImage(
+      img,
+      sx, sy,
+      srcSize, srcSize,  // 正方形來源區域
+      0, 0,
+      MAG_SIZE, MAG_SIZE
+    );
+
+    ctx.restore();
+  }
+}
+
+function showError() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('error').style.display = 'flex';
+}
+
+document.getElementById('btn-prev').addEventListener('click', () => pageFlip && pageFlip.flipPrev());
+document.getElementById('btn-next').addEventListener('click', () => pageFlip && pageFlip.flipNext());
+
+document.addEventListener('keydown', e => {
+  if (!pageFlip) return;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') pageFlip.flipPrev();
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') pageFlip.flipNext();
+});
+
 init();
+
+// 全螢幕
+const btnFs = document.getElementById('btn-fullscreen');
+const iconEnter = document.getElementById('icon-enter');
+const iconExit = document.getElementById('icon-exit');
+const viewerWrap = document.getElementById('viewer-wrap');
+
+btnFs.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    viewerWrap.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+});
+
+document.addEventListener('fullscreenchange', () => {
+  const isFs = !!document.fullscreenElement;
+  btnFs.classList.toggle('active', isFs);
+  iconEnter.style.display = isFs ? 'none' : '';
+  iconExit.style.display = isFs ? '' : 'none';
+  viewerWrap.classList.toggle('is-fullscreen', isFs);
+  // 實際尺寸調整交給 ResizeObserver 處理
+});
+
+// 監聽 viewer-wrap 尺寸變化（含全螢幕切換、視窗縮放）
+const resizeObserver = new ResizeObserver(entries => {
+  for (const entry of entries) {
+    const { width, height } = entry.contentRect;
+    if (width > 0 && height > 0) {
+      applySize(width, height);
+    }
+  }
+});
+resizeObserver.observe(viewerWrap);
 </script>
 </body>
 </html>
